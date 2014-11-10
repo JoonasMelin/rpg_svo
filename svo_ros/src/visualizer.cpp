@@ -35,6 +35,8 @@
 #include <algorithm>
 #include <svo_msgs/DenseInput.h>
 
+#define VIS_SCALE 10
+
 namespace svo {
 
 Visualizer::
@@ -213,10 +215,10 @@ void Visualizer::visualizeMarkers(
   {
     vk::output_helper::publishHexacopterMarker(
         pub_frames_, "cam_pos", "cams", ros::Time(frame->timestamp_),
-        1, 0, 0.3, Vector3d(0.,0.,1.));
+        1, 0, 0.3*VIS_SCALE, Vector3d(0.,0.,1.));
     vk::output_helper::publishPointMarker(
         pub_points_, T_world_from_vision_*frame->pos(), "trajectory",
-        ros::Time::now(), trace_id_, 0, 0.006, Vector3d(0.,0.,0.5));
+        ros::Time::now(), trace_id_, 0, 0.006*VIS_SCALE, Vector3d(0.,0.,0.5));
     if(frame->isKeyframe() || publish_map_every_frame_)
       publishMapRegion(core_kfs);
     removeDeletedPts(map);
@@ -248,7 +250,7 @@ void Visualizer::displayKeyframeWithMps(const FramePtr& frame, int ts)
   SE3 T_world_cam(T_world_from_vision_*frame->T_f_w_.inverse());
   vk::output_helper::publishFrameMarker(
       pub_frames_, T_world_cam.rotation_matrix(),
-      T_world_cam.translation(), "kfs", ros::Time::now(), frame->id_*10, 0, 0.015);
+      T_world_cam.translation(), "kfs", ros::Time::now(), frame->id_*10, 0, 0.015*VIS_SCALE);
 
   // publish point cloud and links
   for(Features::iterator it=frame->fts_.begin(); it!=frame->fts_.end(); ++it)
@@ -261,7 +263,7 @@ void Visualizer::displayKeyframeWithMps(const FramePtr& frame, int ts)
 
     vk::output_helper::publishPointMarker(
         pub_points_, T_world_from_vision_*(*it)->point->pos_, "pts",
-        ros::Time::now(), (*it)->point->id_, 0, 0.005, Vector3d(1.0, 0., 1.0),
+        ros::Time::now(), (*it)->point->id_, 0, 0.01*VIS_SCALE, Vector3d(1.0, 0., 1.0),
         publish_points_display_time_);
     (*it)->point->last_published_ts_ = ts;
   }

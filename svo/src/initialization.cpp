@@ -26,7 +26,7 @@
 namespace svo {
 namespace initialization {
 
-InitResult KltHomographyInit::addFirstFrame(FramePtr frame_ref)
+InitResult KltHomographyInit::addFirstFrame(FramePtr frame_ref, Matrix3d orient, Vector3d pos)
 {
   reset();
   detectFeatures(frame_ref, px_ref_, f_ref_);
@@ -37,10 +37,11 @@ InitResult KltHomographyInit::addFirstFrame(FramePtr frame_ref)
   }
   frame_ref_ = frame_ref;
   px_cur_.insert(px_cur_.begin(), px_ref_.begin(), px_ref_.end());
+  T_first_frame_real_scale = SE3(orient, pos);
   return SUCCESS;
 }
 
-InitResult KltHomographyInit::addSecondFrame(FramePtr frame_cur)
+InitResult KltHomographyInit::addSecondFrame(FramePtr frame_cur, Matrix3d orient, Vector3d pos)
 {
   trackKlt(frame_ref_, frame_cur, px_ref_, px_cur_, f_ref_, f_cur_, disparities_);
   SVO_INFO_STREAM("Init: KLT tracked "<< disparities_.size() <<" features");
@@ -65,15 +66,31 @@ InitResult KltHomographyInit::addSecondFrame(FramePtr frame_cur)
     return FAILURE;
   }
 
-  // Rescale the map such that the mean scene depth is equal to the specified scale
-  vector<double> depth_vec;
-  for(size_t i=0; i<xyz_in_cur_.size(); ++i)
-    depth_vec.push_back((xyz_in_cur_[i]).z());
-  double scene_depth_median = vk::getMedian(depth_vec);
-  double scale = Config::mapScale()/scene_depth_median;
-  frame_cur->T_f_w_ = T_cur_from_ref_ * frame_ref_->T_f_w_;
-  frame_cur->T_f_w_.translation() =
-      -frame_cur->T_f_w_.rotation_matrix()*(frame_ref_->pos() + scale*(frame_cur->pos() - frame_ref_->pos()));
+  // Transformation in real world
+  T_cur_frame_real_scale = SE3(orient, pos);
+  Vector3d trans = T_cur_frame_real_scale.translation() - T_first_frame_real_scale.translation();
+  double length_real = sqrt(pow(trans[0],2) + pow(trans[1],2) + pow(trans[2],2));
+
+  double x = T_cur_from_ref_.translation()[0];
+  double y = T_cur_from_ref_.translation()[1];
+  double z = T_cur_from_ref_.translation()[2];
+  double length_svo = sqrt(pow(x,2) + pow(y,2) + pow(z,2));
+
+  // Rescale the map such that the real length of the movement matches with the svo movement length
+    double scale =length_real / length_svo;
+    frame_cur->T_f_w_ = T_cur_from_ref_ * frame_ref_->T_f_w_;
+    frame_cur->T_f_w_.translation() =
+       -frame_cur->T_f_w_.rotation_matrix()*(frame_ref_->pos() + (T_cur_frame_real_scale.translation() - T_first_frame_real_scale.translation()));
+
+//  // Rescale the map such that the mean scene depth is equal to the specified scale
+//  vector<double> depth_vec;
+//  for(size_t i=0; i<xyz_in_cur_.size(); ++i)
+//    depth_vec.push_back((xyz_in_cur_[i]).z());
+//  double scene_depth_median = vk::getMedian(depth_vec);
+//  double scale = Config::mapScale()/scene_depth_median;
+//  frame_cur->T_f_w_ = T_cur_from_ref_ * frame_ref_->T_f_w_;
+//  frame_cur->T_f_w_.translation() =
+//      -frame_cur->T_f_w_.rotation_matrix()*(frame_ref_->pos() + scale*(frame_cur->pos() - frame_ref_->pos()));
 
   // For each inlier create 3D point and add feature in both frames
   SE3 T_world_cur = frame_cur->T_f_w_.inverse();

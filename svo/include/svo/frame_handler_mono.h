@@ -35,7 +35,7 @@ public:
   virtual ~FrameHandlerMono();
 
   /// Provide an image.
-  void addImage(const cv::Mat& img, double timestamp);
+  void addImage(const cv::Mat& img, double timestamp, Matrix3d orient = Matrix3d::Identity() , Vector3d pos = Vector3d::Zero());
 
   /// Set the first frame (used for synthetic datasets in benchmark node)
   void setFirstFrame(const FramePtr& first_frame);
@@ -74,10 +74,10 @@ protected:
   virtual void initialize();
 
   /// Processes the first frame and sets it as a keyframe.
-  virtual UpdateResult processFirstFrame();
+  virtual UpdateResult processFirstFrame(Matrix3d orient = Matrix3d::Identity() , Vector3d pos = Vector3d::Zero());
 
   /// Processes all frames after the first frame until a keyframe is selected.
-  virtual UpdateResult processSecondFrame();
+  virtual UpdateResult processSecondFrame(Matrix3d orient = Matrix3d::Identity() , Vector3d pos = Vector3d::Zero());
 
   /// Processes all frames after the first two keyframes.
   virtual UpdateResult processFrame();

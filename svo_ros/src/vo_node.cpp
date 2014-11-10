@@ -55,6 +55,7 @@ public:
   void imgCb(const sensor_msgs::ImageConstPtr& msg);
   void processUserActions();
   void remoteKeyCb(const std_msgs::StringConstPtr& key_input);
+  geometry_msgs::PoseStamped filtered_pose;
 };
 
 VoNode::VoNode() :
@@ -97,6 +98,15 @@ VoNode::~VoNode()
 
 void VoNode::imgCb(const sensor_msgs::ImageConstPtr& msg)
 {
+    // Dummy data as the real position for the system.
+  static int old = msg->header.seq;
+  if(msg->header.seq == old)
+      filtered_pose.pose.position.z = 0;
+  else{
+      filtered_pose.pose.position.z += 10.0/70.0 * (msg->header.seq-old);
+  }
+  old = msg->header.seq;
+
   cv::Mat img;
   try {
     img = cv_bridge::toCvShare(msg, "mono8")->image;
@@ -104,7 +114,11 @@ void VoNode::imgCb(const sensor_msgs::ImageConstPtr& msg)
     ROS_ERROR("cv_bridge exception: %s", e.what());
   }
   processUserActions();
-  vo_->addImage(img, msg->header.stamp.toSec());
+
+  Quaterniond quat(filtered_pose.pose.orientation.w,filtered_pose.pose.orientation.x,filtered_pose.pose.orientation.y, filtered_pose.pose.orientation.z);
+  Matrix3d orient = quat.toRotationMatrix();
+  Vector3d pos(filtered_pose.pose.position.x,filtered_pose.pose.position.y, filtered_pose.pose.position.z);
+  vo_->addImage(img, msg->header.stamp.toSec(), orient, pos);
   visualizer_.publishMinimal(img, vo_->lastFrame(), *vo_, msg->header.stamp.toSec());
 
   if(publish_markers_ && vo_->stage() != FrameHandlerBase::STAGE_PAUSED)

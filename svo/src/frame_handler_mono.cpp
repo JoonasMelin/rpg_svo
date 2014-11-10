@@ -55,7 +55,7 @@ FrameHandlerMono::~FrameHandlerMono()
   delete depth_filter_;
 }
 
-void FrameHandlerMono::addImage(const cv::Mat& img, const double timestamp)
+void FrameHandlerMono::addImage(const cv::Mat& img, const double timestamp, Matrix3d orient, Vector3d pos)
 {
   if(!startFrameProcessingCommon(timestamp))
     return;
@@ -74,9 +74,9 @@ void FrameHandlerMono::addImage(const cv::Mat& img, const double timestamp)
   if(stage_ == STAGE_DEFAULT_FRAME)
     res = processFrame();
   else if(stage_ == STAGE_SECOND_FRAME)
-    res = processSecondFrame();
+    res = processSecondFrame(orient, pos);
   else if(stage_ == STAGE_FIRST_FRAME)
-    res = processFirstFrame();
+    res = processFirstFrame(orient, pos);
   else if(stage_ == STAGE_RELOCALIZING)
     res = relocalizeFrame(SE3(Matrix3d::Identity(), Vector3d::Zero()),
                           map_.getClosestKeyframe(last_frame_));
@@ -89,10 +89,10 @@ void FrameHandlerMono::addImage(const cv::Mat& img, const double timestamp)
   finishFrameProcessingCommon(last_frame_->id_, res, last_frame_->nObs());
 }
 
-FrameHandlerMono::UpdateResult FrameHandlerMono::processFirstFrame()
+FrameHandlerMono::UpdateResult FrameHandlerMono::processFirstFrame(Matrix3d orient, Vector3d pos)
 {
   new_frame_->T_f_w_ = SE3(Matrix3d::Identity(), Vector3d::Zero());
-  if(klt_homography_init_.addFirstFrame(new_frame_) == initialization::FAILURE)
+  if(klt_homography_init_.addFirstFrame(new_frame_, orient, pos) == initialization::FAILURE)
     return RESULT_NO_KEYFRAME;
   new_frame_->setKeyframe();
   map_.addKeyframe(new_frame_);
@@ -101,9 +101,9 @@ FrameHandlerMono::UpdateResult FrameHandlerMono::processFirstFrame()
   return RESULT_IS_KEYFRAME;
 }
 
-FrameHandlerBase::UpdateResult FrameHandlerMono::processSecondFrame()
+FrameHandlerBase::UpdateResult FrameHandlerMono::processSecondFrame(Matrix3d orient, Vector3d pos)
 {
-  initialization::InitResult res = klt_homography_init_.addSecondFrame(new_frame_);
+  initialization::InitResult res = klt_homography_init_.addSecondFrame(new_frame_, orient, pos);
   if(res == initialization::FAILURE)
     return RESULT_FAILURE;
   else if(res == initialization::NO_KEYFRAME)

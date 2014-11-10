@@ -37,8 +37,8 @@ public:
   FramePtr frame_ref_;
   KltHomographyInit() {};
   ~KltHomographyInit() {};
-  InitResult addFirstFrame(FramePtr frame_ref);
-  InitResult addSecondFrame(FramePtr frame_ref);
+  InitResult addFirstFrame(FramePtr frame_ref, Matrix3d orient = Matrix3d::Identity(), Vector3d pos = Vector3d::Zero());
+  InitResult addSecondFrame(FramePtr frame_ref, Matrix3d orient = Matrix3d::Identity(), Vector3d pos = Vector3d::Zero());
   void reset();
 
 protected:
@@ -50,6 +50,9 @@ protected:
   vector<int> inliers_;             //!< inliers after the geometric check (e.g., Homography).
   vector<Vector3d> xyz_in_cur_;     //!< 3D points computed during the geometric check.
   SE3 T_cur_from_ref_;              //!< computed transformation between the first two frames.
+
+  SE3 T_first_frame_real_scale;     //!< Real world scale position of the first frame
+  SE3 T_cur_frame_real_scale;       //!< Real world scale position of the current frame
 };
 
 /// Detect Fast corners in the image.
