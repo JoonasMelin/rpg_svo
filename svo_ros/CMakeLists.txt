@@ -23,6 +23,7 @@ FIND_PACKAGE(catkin REQUIRED COMPONENTS
   image_transport
   cv_bridge
   tf
+  tf_conversions
   svo
   svo_msgs
   vikit_common
@@ -38,7 +39,7 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS thread)
 # Describe catkin Project
 catkin_package(
   DEPENDS Eigen OpenCV Sophus Boost
-  CATKIN_DEPENDS roscpp nav_msgs std_msgs visualization_msgs sensor_msgs image_transport cv_bridge tf svo svo_msgs vikit_common vikit_ros
+  CATKIN_DEPENDS roscpp nav_msgs std_msgs visualization_msgs sensor_msgs image_transport cv_bridge tf tf_conversions svo svo_msgs vikit_common vikit_ros
   INCLUDE_DIRS include
   LIBRARIES svo_visualizer
 )
