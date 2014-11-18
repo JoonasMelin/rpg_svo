@@ -1,0 +1,9 @@
+grid_size: 10
+n_pyr_levels: 4
+max_n_kfs: 10
+loba_num_iter: 10
+max_fts: 200
+kfselect_mindist: 0.02
+reproj_thresh: 8.0
+quality_min_fts: 20
+publish_dense_input: 1
