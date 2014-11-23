@@ -184,15 +184,30 @@ FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame()
     new_frame_->T_f_w_ = last_frame_->T_f_w_; // reset to avoid crazy pose jumps
     return RESULT_FAILURE;
   }
+
+  double coverage = map_.getFramesKeypointCoverage(new_frame_);
+
+  SVO_INFO_STREAM("Keypoint coverage: " << coverage*100 << "%");
+
   double depth_mean, depth_min;
   frame_utils::getSceneDepth(*new_frame_, depth_mean, depth_min);
+#ifdef USE_FEATURE_COVERAGE
+  static unsigned coverage_counter;
+  if(coverage > 0.5 || coverage_counter < 10 || tracking_quality_ == TRACKING_BAD)
+  {
+    coverage_counter++;
+#else
   if(!needNewKf(depth_mean) || tracking_quality_ == TRACKING_BAD)
   {
+#endif
     depth_filter_->addFrame(new_frame_);
     return RESULT_NO_KEYFRAME;
   }
+
+  coverage_counter=0;
+
   new_frame_->setKeyframe();
-  SVO_DEBUG_STREAM("New keyframe selected.");
+  SVO_INFO_STREAM("New keyframe selected.");
 
   // new keyframe selected
   for(Features::iterator it=new_frame_->fts_.begin(); it!=new_frame_->fts_.end(); ++it)

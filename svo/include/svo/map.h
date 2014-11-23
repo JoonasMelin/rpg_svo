@@ -99,6 +99,9 @@ public:
   /// Given a frame, return all keyframes which have an overlapping field of view.
   void getCloseKeyframes(const FramePtr& frame, list< pair<FramePtr,double> >& close_kfs) const;
 
+  /// Given a frame, return a area percentage of are that is covered by current keypoints in frame.
+  double getFramesKeypointCoverage(const FramePtr& frame) const;
+
   /// Return the keyframe which is spatially closest and has overlapping field of view.
   FramePtr getClosestKeyframe(const FramePtr& frame) const;
 

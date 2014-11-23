@@ -7,3 +7,5 @@ kfselect_mindist: 0.02
 reproj_thresh: 8.0
 quality_min_fts: 20
 publish_dense_input: 1
+map_scale: 10
+triang_min_corner_score: 10

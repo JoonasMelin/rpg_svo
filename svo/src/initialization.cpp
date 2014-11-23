@@ -38,6 +38,7 @@ InitResult KltHomographyInit::addFirstFrame(FramePtr frame_ref, Matrix3d orient,
   frame_ref_ = frame_ref;
   px_cur_.insert(px_cur_.begin(), px_ref_.begin(), px_ref_.end());
   T_first_frame_real_scale = SE3(orient, pos);
+  frame_ref_->T_f_w_ =  T_first_frame_real_scale;
   return SUCCESS;
 }
 
@@ -71,16 +72,32 @@ InitResult KltHomographyInit::addSecondFrame(FramePtr frame_cur, Matrix3d orient
   Vector3d trans = T_cur_frame_real_scale.translation() - T_first_frame_real_scale.translation();
   double length_real = sqrt(pow(trans[0],2) + pow(trans[1],2) + pow(trans[2],2));
 
+  SVO_INFO_STREAM("Real world transform x: " << trans[0] << " y:" << trans[1] << " z:" << trans[2] << " length:" << length_real);
+
   double x = T_cur_from_ref_.translation()[0];
   double y = T_cur_from_ref_.translation()[1];
   double z = T_cur_from_ref_.translation()[2];
   double length_svo = sqrt(pow(x,2) + pow(y,2) + pow(z,2));
 
+  SVO_INFO_STREAM("SVO transform x: " << x << " y:" << y << " z:" << z << " length:" << length_svo);
+
+#ifdef USE_ASE_IMU
   // Rescale the map such that the real length of the movement matches with the svo movement length
-    double scale =length_real / length_svo;
-    frame_cur->T_f_w_ = T_cur_from_ref_ * frame_ref_->T_f_w_;
-    frame_cur->T_f_w_.translation() =
-       -frame_cur->T_f_w_.rotation_matrix()*(frame_ref_->pos() + (T_cur_frame_real_scale.translation() - T_first_frame_real_scale.translation()));
+  double scale =length_real / length_svo;
+#else
+  // Rescale the map such that the mean scene depth is equal to the specified scale
+  vector<double> depth_vec;
+  for(size_t i=0; i<xyz_in_cur_.size(); ++i)
+    depth_vec.push_back((xyz_in_cur_[i]).z());
+  double scene_depth_median = vk::getMedian(depth_vec);
+  double scale = Config::mapScale()/scene_depth_median;
+#endif
+  frame_cur->T_f_w_ = T_cur_from_ref_ * frame_ref_->T_f_w_;
+  frame_cur->T_f_w_.translation() =
+     -frame_cur->T_f_w_.rotation_matrix()*(frame_ref_->pos() + scale*(frame_cur->pos() - frame_ref_->pos()));
+
+  //frame_cur->T_f_w_ = T_cur_frame_real_scale;
+  //frame_ref_->T_f_w_ = T_first_frame_real_scale;
 
 //  // Rescale the map such that the mean scene depth is equal to the specified scale
 //  vector<double> depth_vec;

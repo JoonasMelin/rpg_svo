@@ -126,6 +126,89 @@ void Map::getCloseKeyframes(
   }
 }
 
+
+double Map::getFramesKeypointCoverage(
+        const FramePtr& frame) const
+{
+  double coverage = 0.0;
+  Vector2d up_left;
+  double ul_length;
+  Vector2d up_right;
+  double ur_length;
+  Vector2d low_left;
+  double ll_length;
+  Vector2d low_right;
+  double lr_length;
+  bool first = true;
+
+  for(auto kf : keyframes_)
+  {
+    for(auto it=frame->fts_.begin(), ite=frame->fts_.end(); it!=ite; ++it)
+    {
+//    }
+//    // check if kf has overlaping field of view with frame, use therefore KeyPoints
+//    for(auto keypoint : kf->key_pts_)
+//    {
+//      if(keypoint == nullptr)
+//        continue;
+
+      if((*it)->point == NULL)
+        continue;
+      if(frame->isVisible((*it)->point->pos_))
+      {
+        //Vector2d c_pt = frame->w2c(keypoint->point->pos_);
+        Vector2d c_pt = frame->w2c((*it)->point->pos_);
+
+        if(first){
+          first = false;
+          up_left = c_pt;
+          ul_length = sqrt(pow(c_pt[0],2) + pow(c_pt[1],2));
+          up_right = c_pt;
+          ur_length = sqrt(pow((frame->cam_->width() - c_pt[0]),2) + pow(c_pt[1],2));
+          low_left = c_pt;
+          ll_length = sqrt(pow(c_pt[0],2) + pow((frame->cam_->height() - c_pt[1]),2));
+          low_right = c_pt;
+          lr_length = sqrt(pow((frame->cam_->width() - c_pt[0]),2) + pow((frame->cam_->height() - c_pt[1]),2));
+          continue;
+        }
+
+        if(sqrt(pow(c_pt[0],2) + pow(c_pt[1],2)) <= ul_length){
+          up_left = c_pt;
+          ul_length = sqrt(pow(c_pt[0],2) + pow(c_pt[1],2));
+        }
+        if(sqrt(pow((frame->cam_->width() - c_pt[0]),2) + pow(c_pt[1],2)) <= ur_length){
+          up_right = c_pt;
+          ur_length = sqrt(pow((frame->cam_->width() - c_pt[0]),2) + pow(c_pt[1],2));
+        }
+        if(sqrt(pow(c_pt[0],2) + pow((frame->cam_->height() - c_pt[1]),2)) <= ll_length){
+          low_left = c_pt;
+          ll_length = sqrt(pow(c_pt[0],2) + pow((frame->cam_->height() - c_pt[1]),2));
+        }
+        if(sqrt(pow((frame->cam_->width() - c_pt[0]),2) + pow((frame->cam_->height() - c_pt[1]),2)) <= lr_length){
+          low_right = c_pt;
+          lr_length = sqrt(pow((frame->cam_->width() - c_pt[0]),2) + pow((frame->cam_->height() - c_pt[1]),2));
+        }
+      }
+    }
+  }
+
+  // TODO: Change these to SVO_DEBUG_STREAM
+//  printf("Up left pixel x:%f y:%f \n", up_left[0], up_left[1]);
+//  printf("Up right pixel x:%f y:%f \n", up_right[0], up_right[1]);
+//  printf("Low right pixel x:%f y:%f \n", low_right[0], low_right[1]);
+//  printf("Low left pixel x:%f y:%f \n", low_left[0], low_left[1]);
+
+  double area = abs(((up_left[0]*up_right[1]-up_left[1]-up_right[0])
+                     + (up_right[0]*low_right[1] - up_right[1]*low_right[0])
+                     + (low_right[0]*low_left[1] - low_right[1]*low_left[0])
+                     + (low_left[0]*up_left[1] - low_left[1]*up_left[0]))/2);
+  coverage = area / (frame->cam_->height() * frame->cam_->width());
+
+//  printf("Full area x:%i y:%i area:%f \n", frame->cam_->width(), frame->cam_->height(), area );
+
+  return coverage;
+}
+
 FramePtr Map::getClosestKeyframe(const FramePtr& frame) const
 {
   list< pair<FramePtr,double> > close_kfs;

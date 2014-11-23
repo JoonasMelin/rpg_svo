@@ -12,6 +12,13 @@ ELSE()
 ENDIF()
 
 
+SET(ASE_IMU FALSE)
+# Set definitions
+IF(ASE_IMU)
+  ADD_DEFINITIONS(-DUSE_ASE_IMU)
+ENDIF()
+
+
 # Add catkin and required ROS packages
 FIND_PACKAGE(catkin REQUIRED COMPONENTS 
   roscpp

@@ -2,9 +2,10 @@
 # user build settings
 
 SET(TRACE TRUE)
-SET(HAVE_G2O FALSE) 
+SET(HAVE_G2O TRUE)
 SET(USE_ROS TRUE) # Set FALSE if you want to build this package without Catkin
-SET(DEBUG_OUTPUT FALSE) # Only relevant if build without ROS
+SET(DEBUG_OUTPUT TRUE) # Only relevant if build without ROS
+SET(FEATURE_COVERAGE TRUE) # Use feature coverage to select new keyframes
 
 ################################################################################
 
@@ -27,6 +28,9 @@ IF(USE_ROS)
 ENDIF()
 IF(DEBUG_OUTPUT)
   ADD_DEFINITIONS(-DSVO_DEBUG_OUTPUT)
+ENDIF()
+IF(FEATURE_COVERAGE)
+  ADD_DEFINITIONS(-DUSE_FEATURE_COVERAGE)
 ENDIF()
 
 # Set build flags, set ARM_ARCHITECTURE environment variable on Odroid
