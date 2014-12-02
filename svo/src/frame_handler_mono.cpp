@@ -136,6 +136,7 @@ FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame(Matrix3d orient, V
 {
   // Set initial pose TODO use prior
   new_frame_->T_f_w_ = last_frame_->T_f_w_;
+  // new_frame_->T_f_w_ = SE3(orient, pos);
 
   // sparse image align
   SVO_START_TIMER("sparse_img_align");
