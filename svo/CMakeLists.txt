@@ -6,6 +6,7 @@ SET(HAVE_G2O TRUE)
 SET(USE_ROS TRUE) # Set FALSE if you want to build this package without Catkin
 SET(DEBUG_OUTPUT TRUE) # Only relevant if build without ROS
 SET(FEATURE_COVERAGE TRUE) # Use feature coverage to select new keyframes
+SET(RELOCALIZE_FROM_IMU TRUE) # Use feature coverage to select new keyframes
 
 ################################################################################
 
@@ -31,6 +32,9 @@ IF(DEBUG_OUTPUT)
 ENDIF()
 IF(FEATURE_COVERAGE)
   ADD_DEFINITIONS(-DUSE_FEATURE_COVERAGE)
+ENDIF()
+IF(RELOCALIZE_FROM_IMU)
+  ADD_DEFINITIONS(-DUSE_RELOCALIZE_FROM_IMU)
 ENDIF()
 
 # Set build flags, set ARM_ARCHITECTURE environment variable on Odroid

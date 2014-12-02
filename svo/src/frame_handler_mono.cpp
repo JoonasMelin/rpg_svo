@@ -72,14 +72,19 @@ void FrameHandlerMono::addImage(const cv::Mat& img, const double timestamp, Matr
   // process frame
   UpdateResult res = RESULT_FAILURE;
   if(stage_ == STAGE_DEFAULT_FRAME)
-    res = processFrame();
+    res = processFrame(orient, pos);
   else if(stage_ == STAGE_SECOND_FRAME)
     res = processSecondFrame(orient, pos);
   else if(stage_ == STAGE_FIRST_FRAME)
     res = processFirstFrame(orient, pos);
   else if(stage_ == STAGE_RELOCALIZING)
+#ifdef USE_RELOCALIZE_FROM_IMU
+      SVO_INFO_STREAM("Relocalizing frame from IMU.");
+    res = relocalizeFramefromIMU(SE3(orient, pos));
+#else
     res = relocalizeFrame(SE3(Matrix3d::Identity(), Vector3d::Zero()),
                           map_.getClosestKeyframe(last_frame_));
+#endif
 
   // set last frame
   last_frame_ = new_frame_;
@@ -127,7 +132,7 @@ FrameHandlerBase::UpdateResult FrameHandlerMono::processSecondFrame(Matrix3d ori
   return RESULT_IS_KEYFRAME;
 }
 
-FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame()
+FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame(Matrix3d orient, Vector3d pos)
 {
   // Set initial pose TODO use prior
   new_frame_->T_f_w_ = last_frame_->T_f_w_;
@@ -193,7 +198,7 @@ FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame()
   frame_utils::getSceneDepth(*new_frame_, depth_mean, depth_min);
 #ifdef USE_FEATURE_COVERAGE
   static unsigned coverage_counter;
-  if(coverage > 0.5 || coverage_counter < 10 || tracking_quality_ == TRACKING_BAD)
+  if(coverage > 0.5 || coverage_counter < 15 || tracking_quality_ == TRACKING_BAD)
   {
     coverage_counter++;
 #else
@@ -273,6 +278,14 @@ FrameHandlerMono::UpdateResult FrameHandlerMono::relocalizeFrame(
     return res;
   }
   return RESULT_FAILURE;
+}
+
+FrameHandlerMono::UpdateResult FrameHandlerMono::relocalizeFramefromIMU(
+    const SE3& T_imu)
+{
+  new_frame_->T_f_w_ = T_imu;
+  stage_ = STAGE_DEFAULT_FRAME;
+  return RESULT_NO_KEYFRAME;
 }
 
 bool FrameHandlerMono::relocalizeFrameAtPose(

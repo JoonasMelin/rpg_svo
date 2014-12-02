@@ -80,12 +80,14 @@ protected:
   virtual UpdateResult processSecondFrame(Matrix3d orient = Matrix3d::Identity() , Vector3d pos = Vector3d::Zero());
 
   /// Processes all frames after the first two keyframes.
-  virtual UpdateResult processFrame();
+  virtual UpdateResult processFrame(Matrix3d orient = Matrix3d::Identity() , Vector3d pos = Vector3d::Zero());
 
   /// Try relocalizing the frame at relative position to provided keyframe.
   virtual UpdateResult relocalizeFrame(
       const SE3& T_cur_ref,
       FramePtr ref_keyframe);
+
+  virtual UpdateResult relocalizeFramefromIMU(const SE3& T_imu);
 
   /// Reset the frame handler. Implement in derived class.
   virtual void resetAll();
