@@ -115,7 +115,7 @@ void VoNode::imgCb(const sensor_msgs::ImageConstPtr& msg)
 #ifdef USE_ASE_IMU
   tf::StampedTransform transform;
   try{
-    listener_.lookupTransform("/camera", "/world",
+    listener_.lookupTransform("/camera", "/worldNED",
                            ros::Time(0), transform);
   }
 

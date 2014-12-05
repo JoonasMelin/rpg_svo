@@ -71,7 +71,7 @@ void Visualizer::publishMinimal(
 {
   ++trace_id_;
   std_msgs::Header header_msg;
-  header_msg.frame_id = "/cam";
+  header_msg.frame_id = "/camera";
   header_msg.seq = trace_id_;
   header_msg.stamp = ros::Time(timestamp);
 
@@ -209,7 +209,7 @@ void Visualizer::visualizeMarkers(
 
   vk::output_helper::publishTfTransform(
       frame->T_f_w_*T_world_from_vision_.inverse(),
-      ros::Time(frame->timestamp_), "cam_pos", "world", br_);
+      ros::Time(frame->timestamp_), "cam_pos", "worldNED", br_);
 
   if(pub_frames_.getNumSubscribers() > 0 || pub_points_.getNumSubscribers() > 0)
   {
@@ -277,7 +277,7 @@ void Visualizer::exportToDense(const FramePtr& frame)
   {
     svo_msgs::DenseInput msg;
     msg.header.stamp = ros::Time(frame->timestamp_);
-    msg.header.frame_id = "/world";
+    msg.header.frame_id = "/worldNED";
     msg.frame_id = frame->id_;
 
     cv_bridge::CvImage img_msg;
