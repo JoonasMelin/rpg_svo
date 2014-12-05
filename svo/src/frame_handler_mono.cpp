@@ -79,8 +79,10 @@ void FrameHandlerMono::addImage(const cv::Mat& img, const double timestamp, Matr
     res = processFirstFrame(orient, pos);
   else if(stage_ == STAGE_RELOCALIZING)
 #ifdef USE_RELOCALIZE_FROM_IMU
-      SVO_INFO_STREAM("Relocalizing frame from IMU.");
+  {
+    SVO_INFO_STREAM("Relocalizing frame from IMU.");
     res = relocalizeFramefromIMU(SE3(orient, pos));
+  }
 #else
     res = relocalizeFrame(SE3(Matrix3d::Identity(), Vector3d::Zero()),
                           map_.getClosestKeyframe(last_frame_));
@@ -210,7 +212,9 @@ FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame(Matrix3d orient, V
     return RESULT_NO_KEYFRAME;
   }
 
+#ifdef USE_FEATURE_COVERAGE
   coverage_counter=0;
+#endif
 
   new_frame_->setKeyframe();
   SVO_INFO_STREAM("New keyframe selected.");
