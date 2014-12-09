@@ -193,9 +193,10 @@ FrameHandlerBase::UpdateResult FrameHandlerMono::processFrame(Matrix3d orient, V
     return RESULT_FAILURE;
   }
 
+#ifdef USE_FEATURE_COVERAGE
   double coverage = map_.getFramesKeypointCoverage(new_frame_);
-
   SVO_INFO_STREAM("Keypoint coverage: " << coverage*100 << "%");
+#endif
 
   double depth_mean, depth_min;
   frame_utils::getSceneDepth(*new_frame_, depth_mean, depth_min);

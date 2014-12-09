@@ -5,8 +5,8 @@ SET(TRACE TRUE)
 SET(HAVE_G2O TRUE)
 SET(USE_ROS TRUE) # Set FALSE if you want to build this package without Catkin
 SET(DEBUG_OUTPUT TRUE) # Only relevant if build without ROS
-SET(FEATURE_COVERAGE TRUE) # Use feature coverage to select new keyframes
-SET(RELOCALIZE_FROM_IMU FALSE) # Use feature coverage to select new keyframes
+SET(FEATURE_COVERAGE FALSE) # Use feature coverage to select new keyframes
+SET(RELOCALIZE_FROM_IMU TRUE) # Use feature coverage to select new keyframes
 
 ################################################################################
 
